@@ -1,482 +1,457 @@
-from tkinter import *
+from tkinter import Tk, Menu, LabelFrame, Frame, Label, Entry, Button, Canvas, ALL
 from tkinter import messagebox as mb, messagebox
 
-from math import *
+from math import sqrt, acos, pi
 
-main_root = Tk(className="Birb")
-frm_param = Frame(main_root)
-
-
-def oval_generate(a, b, shift_x, shift_y):
-    temp = list()
-    t = 0
-
-    while (t <= 360):
-        x = a * cos((t * pi) / 180)
-        y = b * sin((t * pi) / 180)
-        temp.append([birb_center[0] + (x - shift_x), (birb_center[1] + (y - shift_y))])
-        t += 0.1
-
-    return temp
-
+main_root = Tk(className="Geometry")
 
 # Service parameters
-canvas_screen = [1280, 960]
-user_center = [0, 960]
-birb_center = [canvas_screen[0] // 2, canvas_screen[1] // 2]    # Center coordinate
-ent_width = 10              # Width for all entries
-birb_width = 3              # Width for birb
-body_a = 120                # Oval rad by x
-body_b = 65                 # Oval rad by y
-head_r = 40                 # Circle rad
-
-# Coordinates for birb
-body = oval_generate(body_a, body_b, 0, 0)
-head = oval_generate(head_r, head_r, 85, 90)
-
-beak = [[birb_center[0] - 175, birb_center[1] - 85], 
-        [birb_center[0] - 110, birb_center[1] - 120], 
-        [birb_center[0] - 110, birb_center[1] - 120], 
-        [birb_center[0] - 110, birb_center[1] - 85], 
-        [birb_center[0] - 110, birb_center[1] - 85], 
-        [birb_center[0] - 175, birb_center[1] - 85]]
-
-tail = [[birb_center[0] + 95, birb_center[1] - 20], 
-        [birb_center[0] + 175, birb_center[1] - 25], 
-        [birb_center[0] + 175, birb_center[1] - 25], 
-        [birb_center[0] + 102, birb_center[1] + 13], 
-        [birb_center[0] + 102, birb_center[1] + 13], 
-        [birb_center[0] + 95, birb_center[1] - 20]]
-
-wing = [[birb_center[0] + 30, birb_center[1] + 10], 
-        [birb_center[0] + 80, birb_center[1] + 10],
-        [birb_center[0] + 80, birb_center[1] + 10], 
-        [birb_center[0] + 120, birb_center[1] + 100],
-        [birb_center[0] + 120, birb_center[1] + 100], 
-        [birb_center[0] + 30, birb_center[1] + 10]]
-
-paws = [[birb_center[0] - 35, birb_center[1] + 60], 
-        [birb_center[0] - 70, birb_center[1] + 130], 
-        [birb_center[0] + 10, birb_center[1] + 65], 
-        [birb_center[0] + 50, birb_center[1] + 130]]
-
-birb_coords = [beak, head, body, wing, tail, paws]
-undo = [[]] * len(birb_coords)
-
-reset = list()
-
-for i in range(len(birb_coords)):
-    reset.append([])
-    for j in range(len(birb_coords[i])):
-        reset[i].append([])
-        reset[i][j].append(birb_coords[i][j][0])
-        reset[i][j].append(birb_coords[i][j][1])
-
-reset_center = [0] * 2
-undo_center = list()
-reset_center[0] = birb_center[0]
-reset_center[1] = birb_center[1]
+cnv_size = [640, 480]
+point_width = 5
+bunch1 = list()
+bunch2 = list()
+x_axis = [100, 0]
+txt_point1 = [0] * 3
+txt_point2 = [0] * 3
+triangle1 = [[0, 0]] * 3
+triangle2 = [[0, 0]] * 3
+ort1 = [0] * 2
+ort2 = [0] * 2
+line_width = 3
+axis_width = 2
 
 
-def caching():
-    global undo
-    global undo_center
+def init_point(point, index, frame):
+    point[0] = LabelFrame(frame)
+    point[1] = Label(point[0], text="Точка {:2d}:".format(index))
+    point[2] = Entry(point[0], width=8)
+    point[2].insert(0, '0')
+    point[3] = Entry(point[0], width=8)
+    point[3].insert(0, '0')
+    point[4] = index
 
-    undo_center.clear()
-    undo.clear()
+    return point
 
-    undo_center.append(birb_center[0])
-    undo_center.append(birb_center[1])
 
-    for i in range(len(birb_coords)):
-        undo.append([])
-        for j in range(len(birb_coords[i])):
-            undo[i].append([])
-            undo[i][j].append(birb_coords[i][j][0])
-            undo[i][j].append(birb_coords[i][j][1])
+def add_point(point, index):
+    point[1].grid(row=0, column=0, padx=5)
+    point[2].grid(row=0, column=1, padx=5)
+    point[3].grid(row=0, column=2, padx=5)
+    point[0].pack()
+
+
+def rem_point(point):
+    point[1].destroy()
+    point[2].destroy()
+    point[3].destroy()
+    point[0].destroy()
+
+    return point
+
+
+def take_point(index, coords):
+    x = float(coords[index][2].get())
+    #y = cnv_size[1] - float(coords[index][3].get())
+    y = float(coords[index][3].get())
+
+    return [x, y]
 
 
 
-def scale_figure(figure, c_x, c_y):
-    for i in range(len(figure)):
-        tmp_x = figure[i][0]
-        tmp_y = figure[i][1]
-        figure[i][0] = (tmp_x - user_center[0]) * c_x + user_center[0]
-        figure[i][1] = (tmp_y - user_center[1]) * c_y + user_center[1]
+def add_point_bunch1():
+    global bunch1
+    bunch1.append([0, 0, 0, 0, 0])
 
-    return figure
+    bunch1[len(bunch1) - 1] = init_point(bunch1[len(bunch1) - 1], len(bunch1), frm_bunch1_pnt)
+    add_point(bunch1[len(bunch1) - 1], len(bunch1) - 1)
 
 
-def move_figure(figure, x, y):
-    for i in range(len(figure)):
-        figure[i][0] += x
-        figure[i][1] += y
+def rem_point_bunch1():
+    global bunch1
 
-    return figure
-
-
-def rotate_figure(figure, angle):
-    for i in range(len(figure)):
-        tmp_x = figure[i][0] - user_center[0]
-        tmp_y = figure[i][1] - user_center[1]
-        figure[i][0] = tmp_x * cos(angle) - tmp_y * sin(angle) + user_center[0]
-        figure[i][1] = tmp_x * sin(angle) + tmp_y * cos(angle) + user_center[1]
-
-    return figure
-
-
-
-def scaling():
-    global birb_coords
-    global birb_center
-
-    caching()
-
-    try:
-        coeff_x = float(ent_scale_x.get())
-        coeff_y = float(ent_scale_y.get())
-    except:
-        messagebox.showerror("Error", "Введены некорректные коеф-нты для масштабирования")
+    if (len(bunch1) == 3):
+        messagebox.showerror("Error", "Количество точек не может быть меньше 3")
         return
 
-    for i in range(len(birb_coords)):
-        birb_coords[i] = scale_figure(birb_coords[i], coeff_x, coeff_y)
-
-    #tmp_x = birb_center[0]
-    #tmp_y = birb_center[1]
-    #birb_center[0] = (tmp_x - user_center[0]) * coeff_x + user_center[0]
-    #birb_center[1] = (tmp_y - user_center[1]) * coeff_y + user_center[1]
-
-    cnv_wall.delete(ALL)
-    draw_birb()
+    bunch1[len(bunch1) - 1] = rem_point(bunch1[len(bunch1) - 1])
+    bunch1.pop()
 
 
-def moving():
-    global birb_center
+def add_point_bunch2():
+    global bunch2
+    bunch2.append([0, 0, 0, 0, 0])
 
-    try:
-        step_x = float(ent_step_x.get())
-        step_y = -float(ent_step_y.get())
-    except:
-        messagebox.showerror("Error", "Введены некорректные смещения.")
-        return
-
-    caching()
-
-    for i in range(len(birb_coords)):
-        birb_coords[i] = move_figure(birb_coords[i], step_x, step_y)
-
-    #birb_center[0] += step_x
-    #birb_center[1] += step_y
-
-    cnv_wall.delete(ALL)
-    draw_birb()
+    bunch2[len(bunch2) - 1] = init_point(bunch2[len(bunch2) - 1], len(bunch2), frm_bunch2_pnt)
+    add_point(bunch2[len(bunch2) - 1], len(bunch2) - 1)
 
 
-def rotating(side):
-    global birb_coords
-    global birb_center
+def rem_point_bunch2():
+    global bunch2
 
-    caching()
-
-    try:
-        angle = ((float(ent_angle.get()) * pi) / 180) * side
-    except:
-        messagebox.showerror("Error", "Введен некорректный угол поворота")
+    if (len(bunch2) == 3):
+        messagebox.showerror("Error", "Количество точек не может быть меньше 3")
         return
     
-    for i in range(len(birb_coords)):
-        birb_coords[i] = rotate_figure(birb_coords[i], angle)
+    bunch2[len(bunch2) - 1] = rem_point(bunch2[len(bunch2) - 1])
+    bunch2.pop()
 
+
+
+def len_calculate(p1, p2):
+    lenght = sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+    return lenght
+
+
+def check_triangle(pnt1, pnt2, pnt3):
+    a = len_calculate(pnt1, pnt2)
+    b = len_calculate(pnt2, pnt3)
+    c = len_calculate(pnt3, pnt1)
+
+    if (((a + b) < c) or ((a + c) < b) or ((b + c) < a)):
+        return False
+    return True
+
+
+
+def find_k(p1, p2):
+    return (p2[1] - p1[1]) / (p2[0] - p1[0])
+
+
+def find_height_ort(p1, p2, p3):
+    k1 = find_k(p1, p2)
+    k2 = find_k(p2, p3)
+
+    x = ((p1[1] - p3[1]) * k1 * k2 + k1 * p1[0] - k2 * p3[0]) / (k1 - k2)
+    y = (-1 / k2) * (x - p1[0]) + p1[1]
+
+    return x, y
+
+
+def vector_axis_angle(vect):
+    return acos(vect[0] / sqrt(vect[0]**2 + vect[1]**2)) * 180 / pi
+
+
+def find_b(k, pnt):
+    return pnt[1] - (k * pnt[0])
+
+
+def find_height_crossing(p1, p2, p3):
+    try:
+        ks = find_k(p1, p2)
+    except:
+        return p1[0], p3[1]
+
+    if (ks == 0):
+        return p3[0], p1[1]
+
+    kh = -1 / ks
+
+    bs = find_b(ks, p1)
+    bh = find_b(kh, p3)
+
+    x = (bh - bs) / (ks - kh)
+    y = ks * x + bs
+
+    return x, y
     
-    #tmp_x = birb_center[0] - user_center[0]
-    #tmp_y = birb_center[1] - user_center[1]
 
-    #birb_center[0] = tmp_x * cos(angle) - tmp_y * sin(angle) + user_center[0]
-    #birb_center[1] = tmp_x * sin(angle) + tmp_y * cos(angle) + user_center[1]
+def scaling(x_arr, y_arr):
+    x_min = min(x_arr)
+    x_max = max(x_arr)
 
+    y_min = min(y_arr)
+    y_max = max(y_arr)
+
+    x_min -= (x_max - x_min) / 10
+    x_max += (x_max - x_min) / 10
+    y_min -= (y_max - y_min) / 10
+    y_max += (y_max - y_min) / 10
+
+    x_pixel = list()
+    y_pixel = list()
+
+    for i in range(len(x_arr)):
+        x_pixel.append(cnv_size[0] * ((x_arr[i] - x_min) / (x_max - x_min)))
+        y_pixel.append(cnv_size[1] * ((y_max - y_arr[i]) / (y_max - y_min)))
+
+    return x_pixel, y_pixel
+
+
+def draw_figure():
     cnv_wall.delete(ALL)
-    draw_birb()
+
+    x_array = [0]
+    y_array = [0]
+
+    # Triangle_1_[i = 1,2,3]
+    for i in range(len(triangle1)):
+        x_array.append(triangle1[i][0])
+        y_array.append(triangle1[i][1])
+    # Ortcenter [i = 4]
+    x_array.append(ort1[0])
+    y_array.append(ort1[1])
+
+
+    # Осталось добавить точки пересечения высоты и стороны функция -> find_height_crossing
+    # Heights [i=5,6,7]
+    x_tmp, y_tmp = find_height_crossing(triangle1[0], triangle1[1], triangle1[2])
+    x_array.append(x_tmp)
+    y_array.append(y_tmp)
+
+    x_tmp, y_tmp = find_height_crossing(triangle1[1], triangle1[2], triangle1[0])
+    x_array.append(x_tmp)
+    y_array.append(y_tmp)
+
+    x_tmp, y_tmp = find_height_crossing(triangle1[2], triangle1[0], triangle1[1])
+    x_array.append(x_tmp)
+    y_array.append(y_tmp)
+
+
+    # Triangle_1_[i = 8,9,10]
+    for i in range(len(triangle2)):
+        x_array.append(triangle2[i][0])
+        y_array.append(triangle2[i][1])
+    # Ortcenter [i = 11]
+    x_array.append(ort2[0])
+    y_array.append(ort2[1])
+
+    # i = [12,13,14]
+    x_tmp, y_tmp = find_height_crossing(triangle2[0], triangle2[1], triangle2[2])
+    x_array.append(x_tmp)
+    y_array.append(y_tmp)
+
+    x_tmp, y_tmp = find_height_crossing(triangle2[1], triangle2[2], triangle2[0])
+    x_array.append(x_tmp)
+    y_array.append(y_tmp)
+
+    x_tmp, y_tmp = find_height_crossing(triangle2[2], triangle2[0], triangle2[1])
+    x_array.append(x_tmp)
+    y_array.append(y_tmp)
+    
+
+    # Scaling picture
+    x_scaled, y_scaled = scaling(x_array, y_array)
+
+    ''' _Axis_ '''
+    # X axis
+    cnv_wall.create_line(0, y_scaled[0], x_scaled[0] + cnv_size[0], y_scaled[0], fill="blue", width=axis_width)
+    cnv_wall.create_text(x_scaled[0], y_scaled[0], text="(0; 0)")
+    # Y axis
+    cnv_wall.create_line(x_scaled[0], 0, x_scaled[0], y_scaled[0] + cnv_size[1], fill="green", width=axis_width)
+
+
+    ''' _Triangle_1_ '''
+    # Triangle
+    cnv_wall.create_line(x_scaled[1], y_scaled[1], x_scaled[2], y_scaled[2], width=line_width)
+    if (triangle1[0] != [0, 0]):
+        cnv_wall.create_text(x_scaled[1], y_scaled[1], text=txt_point1[0])
+
+    cnv_wall.create_line(x_scaled[2], y_scaled[2], x_scaled[3], y_scaled[3], width=line_width)
+    if (triangle1[1] != [0, 0]):
+        cnv_wall.create_text(x_scaled[2], y_scaled[2], text=txt_point1[1])
+
+    cnv_wall.create_line(x_scaled[3], y_scaled[3], x_scaled[1], y_scaled[1], width=line_width)
+    if (triangle2[2] != [0, 0]):
+        cnv_wall.create_text(x_scaled[3], y_scaled[3], text=txt_point1[2])
+
+    # Heights
+    cnv_wall.create_line(x_scaled[1], y_scaled[1], x_scaled[4], y_scaled[4], fill="steel blue", width=line_width)
+    cnv_wall.create_line(x_scaled[5], y_scaled[5], x_scaled[4], y_scaled[4], fill="steel blue", width=line_width)
+
+    cnv_wall.create_line(x_scaled[2], y_scaled[2], x_scaled[4], y_scaled[4], fill="steel blue", width=line_width)
+    cnv_wall.create_line(x_scaled[6], y_scaled[6], x_scaled[4], y_scaled[4], fill="steel blue", width=line_width)
+
+    cnv_wall.create_line(x_scaled[3], y_scaled[3], x_scaled[4], y_scaled[4], fill="steel blue", width=line_width)
+    cnv_wall.create_line(x_scaled[7], y_scaled[7], x_scaled[4], y_scaled[4], fill="steel blue", width=line_width)
+
+
+    ''' _Triangle_2_ '''
+    # Triangle
+    cnv_wall.create_line(x_scaled[8], y_scaled[8], x_scaled[9], y_scaled[9], width=line_width)
+    if (triangle2[0] != [0, 0]):
+        cnv_wall.create_text(x_scaled[8], y_scaled[8], text=txt_point2[0])
+
+    cnv_wall.create_line(x_scaled[9], y_scaled[9], x_scaled[10], y_scaled[10], width=line_width)
+    if (triangle2[1] != [0, 0]):
+        cnv_wall.create_text(x_scaled[9], y_scaled[9], text=txt_point2[1])
+
+    cnv_wall.create_line(x_scaled[10], y_scaled[10], x_scaled[8], y_scaled[8], width=line_width)
+    if (triangle2[2] != [0, 0]):
+        cnv_wall.create_text(x_scaled[10], y_scaled[10], text=txt_point2[2])
+
+    # Heights
+    cnv_wall.create_line(x_scaled[8], y_scaled[8], x_scaled[11], y_scaled[11], fill="steel blue", width=line_width)
+    cnv_wall.create_line(x_scaled[12], y_scaled[12], x_scaled[11], y_scaled[11], fill="steel blue", width=line_width)
+
+    cnv_wall.create_line(x_scaled[9], y_scaled[9], x_scaled[11], y_scaled[11], fill="steel blue", width=line_width)
+    cnv_wall.create_line(x_scaled[13], y_scaled[13], x_scaled[11], y_scaled[11], fill="steel blue", width=line_width)
+
+    cnv_wall.create_line(x_scaled[10], y_scaled[10], x_scaled[11], y_scaled[11], fill="steel blue", width=line_width)
+    cnv_wall.create_line(x_scaled[14], y_scaled[14], x_scaled[11], y_scaled[11], fill="steel blue", width=line_width)
+
+    ''' _Straight_ '''
+    cnv_wall.create_line(x_scaled[4], y_scaled[4], x_scaled[11], y_scaled[11], fill="gold", width=line_width)
+
+    ''' _Ortcenters_ '''
+    # 1
+    cnv_wall.create_oval(x_scaled[4], y_scaled[4], x_scaled[4], y_scaled[4], width=line_width + 2)
+    # 2
+    cnv_wall.create_oval(x_scaled[11], y_scaled[11], x_scaled[11], y_scaled[11], width=line_width + 2)
 
 
 
-def move_up():
-    step_x = 0
+def start_search():
+    global ort1
+    global ort2
+    global txt_point1
+    global txt_point2
+    global triangle1
+    global triangle2
 
-    try:
-        step_y = float(ent_step_y.get()) * -1
-    except:
-        messagebox.showerror("Error", "Введено некорректное смещение по Y.")
+    counter = 0
+    min_angle = 370
+
+    for i1 in range(len(bunch1)):
+        for j1 in range(len(bunch1)):
+            if (i1 == j1):
+                continue
+            for k1 in range(len(bunch1)):
+                if ((i1 == k1) or (j1 == k1)):
+                    continue
+                try:
+                    b1_pnt1 = take_point(i1, bunch1)
+                    b1_pnt2 = take_point(j1, bunch1)
+                    b1_pnt3 = take_point(k1, bunch1)
+                except:
+                    messagebox.showerror("Error", "Введены некорректные координаты для точки")
+                    return
+
+                if (not(check_triangle(b1_pnt1, b1_pnt2, b1_pnt3))):
+                    continue
+
+                for i2 in range(len(bunch2)):
+                    for j2 in range(len(bunch2)):
+                        if (i2 == j2):
+                            continue
+                        for k2 in range(len(bunch2)):
+                            if ((i2 == k2) or (j2 == k2)):
+                                continue
+                            try:
+                                b2_pnt1 = take_point(i2, bunch2)
+                                b2_pnt2 = take_point(j2, bunch2)
+                                b2_pnt3 = take_point(k2, bunch2)
+                            except:
+                                messagebox.showerror("Error", "Введены некорректные координаты для точки")
+                                return
+                            
+                            if (not(check_triangle(b2_pnt1, b2_pnt2, b2_pnt3))):
+                                continue
+                            
+                            try:
+                                b1_x, b1_y = find_height_ort(b1_pnt1, b1_pnt2, b1_pnt3)
+                            except:
+                                continue
+
+                            try:
+                                b2_x, b2_y = find_height_ort(b2_pnt1, b2_pnt2, b2_pnt3)
+                            except:
+                                continue
+
+                            print("ort1 = ", b1_x, b1_y)
+                            print("ort2 = ", b2_x, b2_y)
+
+                            vector = [b2_x - b1_x, b2_y - b1_y]
+                            angle = vector_axis_angle(vector)
+
+                            if (angle < min_angle):
+                                counter += 1
+                                min_angle = angle
+                                ort1 = [b1_x, b1_y]
+                                ort2 = [b2_x, b2_y]
+                                triangle1 = [b1_pnt1, b1_pnt2, b1_pnt3]
+                                triangle2 = [b2_pnt1, b2_pnt2, b2_pnt3]
+                                #txt_point1 = [bunch1[i1][4], bunch1[j1][4], bunch1[k1][4]]
+                                #txt_point2 = [bunch2[i2][4], bunch2[j2][4], bunch2[k2][4]]
+                                txt_point1 = ["({:3.2f};{:3.2f})".format(b1_pnt1[0], b1_pnt1[1]), 
+                                              "({:3.2f};{:3.2f})".format(b1_pnt2[0], b1_pnt2[1]),
+                                              "({:3.2f};{:3.2f})".format(b1_pnt3[0], b1_pnt3[1])]
+                                txt_point2 = ["({:3.2f};{:3.2f})".format(b2_pnt1[0], b2_pnt1[1]), 
+                                              "({:3.2f};{:3.2f})".format(b2_pnt2[0], b2_pnt2[1]),
+                                              "({:3.2f};{:3.2f})".format(b2_pnt3[0], b2_pnt3[1])]
+    '''
+    print("triangle1 = ", triangle1)
+    print("triangle1 = ", triangle2)
+
+    print("\nort1 = ", ort1)
+    print("ort2 = ", ort2)
+
+    print("\ntxt_point1 = ", txt_point1)
+    print("txt_point1 = ", txt_point2)
+    '''
+
+    if (counter == 0):
+        messagebox.showerror("Error", "Треугольники не найдены")
         return
-
-    moving(step_x, step_y)
-
-
-def move_down():
-    step_x = 0
-
-    try:
-        step_y = float(ent_step_y.get())
-    except:
-        messagebox.showerror("Error", "Введено некорректное смещение по Y.")
-        return
-
-    #moving(step_x, step_y)
-
-
-def move_right():
-    try:
-        step_x = float(ent_step_x.get())
-    except:
-        messagebox.showerror("Error", "Введено некорректное смещение по X.")
-        return
-
-    step_y = 0
-    moving(step_x, step_y)
-
-
-def move_left():
-    try:
-        step_x = float(ent_step_x.get()) * -1
-    except:
-        messagebox.showerror("Error", "Введено некорректное смещение по X.")
-        return
-
-    step_y = 0
-    #moving(step_x, step_y)
-
-
-
-def rotate_rigth():
-    side = 1
-    rotating(side)
-
-
-def rotate_left():
-    side = -1
-    rotating(side)
-
-
-
-def update_center():
-    global user_center
-
-    try:
-        new_x = float(ent_center_x.get())
-        new_y = canvas_screen[1] - float(ent_center_y.get())
-    except:
-        messagebox.showerror("Error", "Введены некорректные координаты для центра")
-        return
-
-    user_center[0] = new_x
-    user_center[1] = new_y
-    cnv_wall.delete(ALL)
-    draw_birb()
-
-
-def go_undo():
-    global birb_coords
-    global birb_center
-
-    birb_center[0] = undo_center[0]
-    birb_center[1] = undo_center[1]
-
-    for i in range(len(birb_coords)):
-        for j in range(len(birb_coords[i])):
-            birb_coords[i][j][0] = undo[i][j][0]
-            birb_coords[i][j][1] = undo[i][j][1]
     
     cnv_wall.delete(ALL)
-    draw_birb()
+    draw_figure()
 
 
-def go_reset():
-    global birb_coords
-    global birb_center
 
-    birb_center[0] = reset_center[0]
-    birb_center[1] = reset_center[1]
+# Bunch_1____________________________________________
+frm_bunch1 = LabelFrame(main_root, text="Множество 1")
+frm_bunch1_pnt = Frame(frm_bunch1)
+frm_bunch1_key = Frame(main_root)
 
-    for i in range(len(birb_coords)):
-        for j in range(len(birb_coords[i])):
-            birb_coords[i][j][0] = reset[i][j][0]
-            birb_coords[i][j][1] = reset[i][j][1]
-    
-    cnv_wall.delete(ALL)
-    draw_birb()
+btn_bunch1_add = Button(frm_bunch1_key, text='+', command=add_point_bunch1)
+btn_bunch1_rem = Button(frm_bunch1_key, text='-', command=rem_point_bunch1)
 
+btn_bunch1_add.grid(row=0, column=0, sticky="WESN", pady=5)
+btn_bunch1_rem.grid(row=0, column=1, sticky="WESN", pady=5)
 
-# Center__________________________________________________
-frm_center = LabelFrame(frm_param, text="Координты центра")
-
-lbl_center_x = Label(frm_center, text="По X: ")
-ent_center_x = Entry(frm_center, width=ent_width)
-ent_center_x.insert(0, '0')
-
-lbl_center_y = Label(frm_center, text="По Y: ")
-ent_center_y = Entry(frm_center, width=ent_width)
-ent_center_y.insert(0, '0')
-
-btn_center = Button(frm_center, text="Задать", command=update_center)
-
-lbl_center_x.grid(row=0, column=0, sticky="WESN", padx=5)
-ent_center_x.grid(row=0, column=1, sticky="WESN", padx=5)
-lbl_center_y.grid(row=1, column=0, sticky="WESN", padx=5)
-ent_center_y.grid(row=1, column=1, sticky="WESN", padx=5)
-btn_center.grid(row=2, column=0, columnspan=2, sticky="WESN", padx=5)
-
-frm_center.grid(row=0, column=0, sticky='WESN')
-
-# Move_____________________________________________
-frm_move = LabelFrame(frm_param, text="Перемещение")
-frm_step = Frame(frm_move)
-frm_btn_move = Frame(frm_move)
-
-lbl_step_x = Label(frm_step, text="Шаг по X:")
-ent_step_x = Entry(frm_step, width=ent_width)
-ent_step_x.insert(0, '0')
-
-lbl_step_y = Label(frm_step, text="Шаг по Y:")
-ent_step_y = Entry(frm_step, width=ent_width)
-ent_step_y.insert(0, '0')
-
-lbl_step_x.grid(row=0, column=0, sticky="WESN", padx=5)
-ent_step_x.grid(row=0, column=1, sticky="WESN", padx=5)
-
-lbl_step_y.grid(row=1, column=0, sticky="WESN", padx=5)
-ent_step_y.grid(row=1, column=1, sticky="WESN", padx=5)
-
-#Buttons
-btn_move = Button(frm_btn_move, text="Переместить", command=moving)
-btn_move.pack()
-'''
-txt_move = "▲◄►▼"
-fun_move = [move_up, move_left, move_right, move_down]
-btn_move = [0] * len(txt_move)
-
-for i in range(len(txt_move)):
-    btn_move[i] = Button(frm_btn_move, text=txt_move[i], command=fun_move[i])
-
-btn_move[0].grid(row=0, column=1, sticky='WESN')
-btn_move[1].grid(row=1, column=0, sticky='WESN')
-
-btn_useless = Button(frm_btn_move, state=DISABLED)
-btn_useless.grid(row=1, column=1, sticky='WESN')
-
-btn_move[2].grid(row=1, column=2, sticky='WESN')
-btn_move[3].grid(row=2, column=1, sticky='WESN')
-'''
-frm_step.grid(row=0, column=0, sticky='WESN')
-frm_btn_move.grid(row=1, column=0, padx=10, pady=10)
-frm_move.grid(row=1, column=0, sticky='WESN')
+frm_bunch1_pnt.grid(row=0, column=0, sticky="WESN")
+frm_bunch1.grid(row=0, column=0, sticky="WESN")
+frm_bunch1_key.grid(row=1, column=0, sticky="WESN")
 
 
-# Scale_________________________________________________
-frm_scale = LabelFrame(frm_param, text="Масштабирование")
+# Bunch_2____________________________________________
+frm_bunch2 = LabelFrame(main_root, text="Множество 2")
+frm_bunch2_pnt = Frame(frm_bunch2)
+frm_bunch2_key = Frame(main_root)
 
-lbl_scale_x = Label(frm_scale, text="По X: ")
-ent_scale_x = Entry(frm_scale, width=ent_width)
-ent_scale_x.insert(0, '1')
+btn_bunch2_add = Button(frm_bunch2_key, text='+', command=add_point_bunch2)
+btn_bunch2_rem = Button(frm_bunch2_key, text='-', command=rem_point_bunch2)
 
-lbl_scale_y = Label(frm_scale, text="По Y: ")
-ent_scale_y = Entry(frm_scale, width=ent_width)
-ent_scale_y.insert(0, '1')
+btn_bunch2_add.grid(row=0, column=0, sticky="WESN", pady=5)
+btn_bunch2_rem.grid(row=0, column=1, sticky="WESN", pady=5)
 
-btn_scale = Button(frm_scale, text="Масштабировать", command=scaling)
-
-lbl_scale_x.grid(row=0, column=0, padx=5)
-ent_scale_x.grid(row=0, column=1, padx=5)
-lbl_scale_y.grid(row=1, column=0, padx=5)
-ent_scale_y.grid(row=1, column=1, padx=5)
-
-btn_scale.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky='WESN')
-
-frm_scale.grid(row=2, column=0, sticky='WESN')
+frm_bunch2_pnt.grid(row=0, column=0, sticky="WESN")
+frm_bunch2.grid(row=0, column=1, sticky="WESN")
+frm_bunch2_key.grid(row=1, column=1, sticky="WESN")
 
 
-# Rotation_____________________________________
-frm_rot  = LabelFrame(frm_param, text="Поворот")
-frm_angle = Frame(frm_rot)
-frm_btn_rot = Frame(frm_rot)
-
-lbl_angle = Label(frm_angle, text="Угол: ")
-ent_angle = Entry(frm_angle, width=ent_width)
-ent_angle.insert(0, '0')
-
-lbl_angle.grid(row=0, column=0, padx=5)
-ent_angle.grid(row=0, column=1, padx=5)
-
-btn_rot_left = Button(frm_btn_rot, text="<", command=rotate_left)
-btn_rot_rigth = Button(frm_btn_rot, text=">", command=rotate_rigth)
-
-btn_rot_left.grid(row=0, column=0, sticky='WESN')
-btn_rot_rigth.grid(row=0, column=1, sticky='WESN')
-
-frm_angle.grid(row=0, column=0, sticky='WESN')
-frm_btn_rot.grid(row=1, column=0, padx=10, pady=10)
-frm_rot.grid(row=3, column=0, sticky='WESN')
-
-btn_back = Button(frm_param, text="Вернуть", command=go_undo)
-btn_back.grid(row=4, column=0, sticky='WESN', padx=10, pady=10)
-
-btn_reset = Button(frm_param, text="Сброс", command=go_reset)
-btn_reset.grid(row=5, column=0, sticky='WESN', padx=10, pady=10)
-
-# Draw_____________________________________________
+# Draw
 frm_draw = LabelFrame(main_root, text="Изображение")
 
-cnv_wall = Canvas(frm_draw, width=canvas_screen[0], height=canvas_screen[1], bg="white")
-
+cnv_wall = Canvas(frm_draw, width=cnv_size[0], height=cnv_size[1], bg="white")
 cnv_wall.pack()
 
-frm_draw.grid(row=0, column=1, sticky='WESN')
-frm_param.grid(row=0, column=0, sticky='WESN')
-    
-
-
-def draw_birb():
-    cnv_wall.create_oval(user_center[0], user_center[1], 
-                        user_center[0], user_center[1], 
-                        width=6, outline="red")
-    #cnv_wall.create_oval(birb_center[0], birb_center[1], 
-    #                    birb_center[0], birb_center[1], 
-    #                    width=8, outline="blue")
-    # Beak
-    for i in range(len(beak) - 1):
-        cnv_wall.create_line(beak[i][0], beak[i][1], beak[i + 1][0], beak[i + 1][1],
-                            width=birb_width + 1)
-
-    # Head
-    for i in range(len(head)):
-        cnv_wall.create_oval(head[i][0], head[i][1], head[i][0], head[i][1], 
-                            width=birb_width)
-    
-    # Body
-    for i in range(len(body)):
-        cnv_wall.create_oval(body[i][0], body[i][1], body[i][0], body[i][1], 
-                            width=birb_width)
-
-    # Tail
-    for i in range(len(tail) - 1):
-        cnv_wall.create_line(tail[i][0], tail[i][1], tail[i + 1][0], tail[i + 1][1],
-                            width=birb_width + 1)
-
-    # Wing
-    for i in range(len(tail) - 1):
-        cnv_wall.create_line(wing[i][0], wing[i][1], wing[i + 1][0], wing[i + 1][1],
-                            width=birb_width + 1)
-
-    # Paws
-    cnv_wall.create_line(paws[0][0], paws[0][1], paws[1][0], paws[1][1], 
-                        width=birb_width + 1)
-    cnv_wall.create_line(paws[2][0], paws[2][1], paws[3][0], paws[3][1], 
-                        width=birb_width + 1)
+frm_draw.grid(row=0, column=2, rowspan=2, sticky="WESN")
 
 
 def main():
-    draw_birb()
+    global bunch1
+    global bunch2
+
+    for i in range(3):
+        add_point_bunch1()
+        add_point_bunch2()
 
 
 main()
+
+start_menu = Menu(main_root, tearoff=0)
+main_root.config(menu=start_menu)
+start_menu.add_command(label="Запустить", command=start_search)
 
 main_root.mainloop()
