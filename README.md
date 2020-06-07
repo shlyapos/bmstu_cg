@@ -7,6 +7,8 @@ Bauman Moscow State Technical University
 
 **Лабы лучше не делать на ткинтере (кроме может быть первых двух)**
 
+Спасибо [Winterpuma](https://github.com/Winterpuma/bmstu_CG) и [Panda-Lewandowski](https://github.com/Panda-Lewandowski/Computer-graphics) за вдохновение на выполнение лаб
+
 > :white_check_mark: **Лр #1 Геометрическая задача**
 >
 > На плоскости даны два множества точек. Найти пару треугольников (каждый треугольник в качестве вершин имеет три различные точки одного 
@@ -54,3 +56,19 @@ ___
 > Простой алгоритм (о нет) 
 >
 > [Реализация (C# Windows Forms)](https://github.com/shlyapik228/bmstu_cg/tree/master/lab_07)
+___
+
+> :white_check_mark: **Лр #8 Алгоритм Кируса-Бека**
+>
+> [Реализация (C# Windows Forms)](https://github.com/shlyapik228/bmstu_cg/tree/master/lab_08)
+___
+
+> :white_check_mark: **Лр #9 Алгоритмы Сазерленда-Ходжмена**
+>
+> [Реализация (C# Windows Forms)](https://github.com/shlyapik228/bmstu_cg/tree/master/lab_09)
+
+___
+
+> :white_check_mark: **Лр #10 Алгоритм Плавающего горизонта**
+>
+> [Реализация (C# Windows Forms)](https://github.com/shlyapik228/bmstu_cg/tree/master/lab_10)
